@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { CheckCheck, Heart, Flame, Sun, Smile, Reply } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import TypingIndicator from "./typing-indicator";
 import AvatarSelector from "./avatar-selector";
 import type { Message } from "@shared/schema";
 
@@ -165,7 +164,7 @@ export default function MessageList({
         );
       })}
 
-      {isGeneratingResponse && <TypingIndicator />}
+
       
       <div ref={messagesEndRef} />
     </div>

@@ -10,9 +10,10 @@ import {
 interface ChatHeaderProps {
   onClearChat: () => void;
   isClearing: boolean;
+  isGeneratingResponse: boolean;
 }
 
-export default function ChatHeader({ onClearChat, isClearing }: ChatHeaderProps) {
+export default function ChatHeader({ onClearChat, isClearing, isGeneratingResponse }: ChatHeaderProps) {
   return (
     <div className="bg-medium-purple border-b border-bright-purple/20 p-4" data-testid="chat-header">
       <div className="flex items-center justify-between">
@@ -23,7 +24,9 @@ export default function ChatHeader({ onClearChat, isClearing }: ChatHeaderProps)
           <div>
             <h2 className="font-semibold text-white" data-testid="text-contact-name">Маріанна</h2>
             <p className="text-light-purple text-sm">
-              <span className="text-bright-purple" data-testid="status-online">в мережі</span>
+              <span className="text-bright-purple" data-testid="status-online">
+                {isGeneratingResponse ? "пише..." : "в мережі"}
+              </span>
             </p>
           </div>
         </div>

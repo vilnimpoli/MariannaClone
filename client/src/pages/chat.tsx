@@ -35,10 +35,11 @@ export default function ChatPage() {
     },
   });
 
-  // Get messages for current conversation
+  // Get messages for current conversation with polling
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/conversations", currentConversationId, "messages"],
     enabled: !!currentConversationId,
+    refetchInterval: 1000, // Poll every second for new messages
   });
 
   // Initialize conversation
@@ -125,7 +126,11 @@ export default function ChatPage() {
 
   const handleSendMessage = (content: string, mediaFile?: File, replyToId?: string) => {
     if (!currentConversationId || (!content.trim() && !mediaFile)) return;
-    sendMessageMutation.mutate({ content, mediaFile, replyToId });
+    sendMessageMutation.mutate({ 
+      content, 
+      mediaFile, 
+      replyToId: replyToMessage?.id || replyToId 
+    });
     // Clear reply after sending
     if (replyToMessage) {
       setReplyToMessage(null);
@@ -161,6 +166,7 @@ export default function ChatPage() {
       <ChatHeader 
         onClearChat={() => clearChatMutation.mutate()}
         isClearing={clearChatMutation.isPending}
+        isGeneratingResponse={sendMessageMutation.isPending}
       />
       
       <MessageList

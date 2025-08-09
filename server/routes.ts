@@ -100,30 +100,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertMessageSchema.parse(messageData);
       const userMessage = await storage.createMessage(validatedData);
 
-      // If it's a user message, generate AI responses
-      if (req.body.sender === 'user') {
-        const conversationHistory = await storage.getMessages(req.params.id);
-        const aiResponses = await generateMariannaResponse(req.body.content, conversationHistory, messageData.mediaUrl);
-        
-        // Send multiple AI responses (typical for Marianna)
-        const aiMessages = [];
-        for (const response of aiResponses) {
-          const aiMessageData = {
-            conversationId: req.params.id,
-            content: response,
-            sender: 'ai' as const,
-            mediaUrl: null,
-            mediaType: null,
-            aiAvatar: null,
-            replyToId: null,
-          };
-          const aiMessage = await storage.createMessage(aiMessageData);
-          aiMessages.push(aiMessage);
-        }
+      // First, always return the user message immediately
+      res.status(201).json({ userMessage });
 
-        res.status(201).json({ userMessage, aiMessages });
-      } else {
-        res.status(201).json({ userMessage });
+      // If it's a user message, generate AI responses with delay
+      if (req.body.sender === 'user') {
+        // Run AI response generation in background
+        setImmediate(async () => {
+          try {
+            const conversationHistory = await storage.getMessages(req.params.id);
+            const aiResponses = await generateMariannaResponse(req.body.content, conversationHistory, messageData.mediaUrl);
+            
+            // Send AI responses with 2 second delay between each
+            for (let i = 0; i < aiResponses.length; i++) {
+              if (i > 0) {
+                await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+              }
+              
+              const aiMessageData = {
+                conversationId: req.params.id,
+                content: aiResponses[i],
+                sender: 'ai' as const,
+                mediaUrl: null,
+                mediaType: null,
+                aiAvatar: null,
+                replyToId: null,
+              };
+              await storage.createMessage(aiMessageData);
+            }
+          } catch (error) {
+            console.error('Error generating AI responses:', error);
+          }
+        });
       }
     } catch (error) {
       res.status(400).json({ message: "Failed to send message" });

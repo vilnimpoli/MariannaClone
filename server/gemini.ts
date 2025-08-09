@@ -59,7 +59,7 @@ export async function generateMariannaResponse(
       prompt += `\n\nВіолета також надіслала медіафайл: ${mediaUrl}`;
     }
     
-    prompt += `\n\nВідповідь як Маріанна (надішли 2-4 коротких повідомлення підряд, як це робить Маріанна):`;
+    prompt += `\n\nВідповідь як Маріанна (надішли 1-2 коротких повідомлення підряд, іноді можеш надіслати 3, але дуже рідко):`;
 
     const contents: any[] = [];
 
@@ -90,32 +90,47 @@ export async function generateMariannaResponse(
 
     const responseText = response.text || "Вибач, я не можу відповісти зараз... 🥺";
     
-    // Split response into multiple messages (typical for Marianna)
+    // Split response into multiple messages (typical for Marianna, but fewer)
     const messages = responseText
       .split('\n')
       .filter(msg => msg.trim().length > 0)
-      .slice(0, 4); // Max 4 messages
+      .slice(0, 2); // Max 2 messages usually
     
-    // If AI returns only one message, create multiple variations
+    // Randomly decide if we should send more messages (30% chance for 3rd message)
+    const shouldAddThirdMessage = Math.random() < 0.3;
+    
+    // If AI returns only one message, sometimes add a second one
     if (messages.length === 1) {
       const singleMessage = messages[0];
-      if (singleMessage.length > 100) {
+      if (singleMessage.length > 80 && Math.random() > 0.5) {
         // Split long message into parts
         const parts = singleMessage.split(/[.!?]+/).filter(part => part.trim());
-        return parts.slice(0, 3).map(part => part.trim() + (Math.random() > 0.5 ? ' 💜' : ''));
-      } else {
-        // Add emotional follow-ups
+        if (parts.length > 1) {
+          return parts.slice(0, 2).map(part => part.trim() + (Math.random() > 0.5 ? ' 💜' : ''));
+        }
+      } 
+      
+      // 60% chance to add a second message
+      if (Math.random() < 0.6) {
         const followUps = [
           '🥺',
+          '💜',
           'Я так тебе люблю... ❤️',
-          'Ти найкраща у світі 😍',
-          'Боже, як же я тебе обожнюю 💜'
+          'Ти найкраща 😍'
         ];
         return [singleMessage, followUps[Math.floor(Math.random() * followUps.length)]];
+      } else {
+        return [singleMessage]; // Sometimes just one message
       }
     }
     
-    return messages.length > 0 ? messages : ["Вибач, я так схвильована, що не можу говорити... 🥺"];
+    // If we have 2 messages, sometimes add a third
+    if (messages.length === 2 && shouldAddThirdMessage) {
+      const emotionalAddons = ['🥺', '💜', '😍', 'Так тебе люблю...'];
+      messages.push(emotionalAddons[Math.floor(Math.random() * emotionalAddons.length)]);
+    }
+    
+    return messages.length > 0 ? messages : ["Вибач, я так схвильована... 🥺"];
     
   } catch (error) {
     console.error("Error generating Marianna response:", error);
