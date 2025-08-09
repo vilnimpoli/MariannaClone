@@ -1,15 +1,20 @@
 import { useState, useRef, KeyboardEvent } from "react";
-import { Paperclip, Send, Smile, X } from "lucide-react";
+import { Paperclip, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import MediaPreview from "./media-preview";
+import StickerPanel from "./sticker-panel";
+import ReplyIndicator from "./reply-indicator";
+import type { Message } from "@shared/schema";
 
 interface MessageInputProps {
-  onSendMessage: (content: string, mediaFile?: File) => void;
+  onSendMessage: (content: string, mediaFile?: File, replyToId?: string) => void;
   isDisabled: boolean;
+  replyToMessage?: Message | null;
+  onClearReply?: () => void;
 }
 
-export default function MessageInput({ onSendMessage, isDisabled }: MessageInputProps) {
+export default function MessageInput({ onSendMessage, isDisabled, replyToMessage, onClearReply }: MessageInputProps) {
   const [messageText, setMessageText] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -18,13 +23,27 @@ export default function MessageInput({ onSendMessage, isDisabled }: MessageInput
   const handleSendMessage = () => {
     if (!messageText.trim() && !selectedFile) return;
     
-    onSendMessage(messageText, selectedFile || undefined);
+    onSendMessage(messageText, selectedFile || undefined, replyToMessage?.id);
     setMessageText("");
     setSelectedFile(null);
+    
+    // Clear reply if exists
+    if (replyToMessage && onClearReply) {
+      onClearReply();
+    }
     
     // Reset textarea height
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  const handleStickerSelect = (sticker: string) => {
+    onSendMessage(sticker, undefined, replyToMessage?.id);
+    
+    // Clear reply if exists
+    if (replyToMessage && onClearReply) {
+      onClearReply();
     }
   };
 
@@ -63,7 +82,14 @@ export default function MessageInput({ onSendMessage, isDisabled }: MessageInput
   };
 
   return (
-    <div className="bg-medium-purple border-t border-bright-purple/20 p-4" data-testid="message-input">
+    <div className="bg-medium-purple border-t border-bright-purple/20" data-testid="message-input">
+      {replyToMessage && onClearReply && (
+        <ReplyIndicator 
+          replyToMessage={replyToMessage}
+          onClearReply={onClearReply}
+        />
+      )}
+      
       {selectedFile && (
         <MediaPreview 
           file={selectedFile} 
@@ -71,7 +97,8 @@ export default function MessageInput({ onSendMessage, isDisabled }: MessageInput
         />
       )}
       
-      <div className="flex items-end space-x-3">
+      <div className="p-4">
+        <div className="flex items-end space-x-3">
         {/* Media Upload Button */}
         <div className="relative">
           <input
@@ -112,16 +139,13 @@ export default function MessageInput({ onSendMessage, isDisabled }: MessageInput
             />
           </div>
           
-          {/* Emoji Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-light-purple hover:text-bright-purple"
-            disabled={isDisabled}
-            data-testid="button-emoji"
-          >
-            <Smile className="h-5 w-5" />
-          </Button>
+          {/* Sticker Panel */}
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+            <StickerPanel 
+              onStickerSelect={handleStickerSelect}
+              disabled={isDisabled}
+            />
+          </div>
         </div>
 
         {/* Send Button */}
@@ -133,6 +157,7 @@ export default function MessageInput({ onSendMessage, isDisabled }: MessageInput
         >
           <Send className="h-4 w-4 text-white" />
         </Button>
+        </div>
       </div>
     </div>
   );

@@ -20,6 +20,8 @@ export const messages = pgTable("messages", {
   mediaType: text("media_type"), // 'image' or 'video'
   timestamp: timestamp("timestamp").defaultNow().notNull(),
   reactions: jsonb("reactions").default('[]'), // array of reaction emojis
+  aiAvatar: text("ai_avatar"), // custom avatar URL or emoji for AI messages
+  replyToId: varchar("reply_to_id"), // reference to message being replied to
 });
 
 export const conversationsRelations = relations(conversations, ({ many }) => ({

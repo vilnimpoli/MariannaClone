@@ -81,6 +81,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sender: req.body.sender,
         mediaUrl: null as string | null,
         mediaType: null as string | null,
+        aiAvatar: req.body.aiAvatar || null,
+        replyToId: req.body.replyToId || null,
       };
 
       // Handle media upload
@@ -112,6 +114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sender: 'ai' as const,
             mediaUrl: null,
             mediaType: null,
+            aiAvatar: null,
+            replyToId: null,
           };
           const aiMessage = await storage.createMessage(aiMessageData);
           aiMessages.push(aiMessage);

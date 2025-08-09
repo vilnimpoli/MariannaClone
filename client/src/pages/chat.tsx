@@ -11,6 +11,8 @@ import type { Conversation, Message } from "@shared/schema";
 export default function ChatPage() {
   const { conversationId } = useParams();
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
+  const [currentAiAvatar, setCurrentAiAvatar] = useState<string>("М");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -52,12 +54,15 @@ export default function ChatPage() {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async ({ content, mediaFile }: { content: string; mediaFile?: File }) => {
+    mutationFn: async ({ content, mediaFile, replyToId }: { content: string; mediaFile?: File; replyToId?: string }) => {
       const formData = new FormData();
       formData.append("content", content);
       formData.append("sender", "user");
       if (mediaFile) {
         formData.append("media", mediaFile);
+      }
+      if (replyToId) {
+        formData.append("replyToId", replyToId);
       }
 
       const response = await fetch(`/api/conversations/${currentConversationId}/messages`, {
@@ -118,13 +123,29 @@ export default function ChatPage() {
     },
   });
 
-  const handleSendMessage = (content: string, mediaFile?: File) => {
+  const handleSendMessage = (content: string, mediaFile?: File, replyToId?: string) => {
     if (!currentConversationId || (!content.trim() && !mediaFile)) return;
-    sendMessageMutation.mutate({ content, mediaFile });
+    sendMessageMutation.mutate({ content, mediaFile, replyToId });
+    // Clear reply after sending
+    if (replyToMessage) {
+      setReplyToMessage(null);
+    }
   };
 
   const handleAddReaction = (messageId: string, reaction: string) => {
     addReactionMutation.mutate({ messageId, reaction });
+  };
+
+  const handleReplyToMessage = (message: Message) => {
+    setReplyToMessage(message);
+  };
+
+  const handleClearReply = () => {
+    setReplyToMessage(null);
+  };
+
+  const handleAvatarChange = (avatar: string) => {
+    setCurrentAiAvatar(avatar);
   };
 
   if (!currentConversationId && createConversationMutation.isPending) {
@@ -146,12 +167,17 @@ export default function ChatPage() {
         messages={messages}
         isLoading={messagesLoading}
         onAddReaction={handleAddReaction}
+        onReplyToMessage={handleReplyToMessage}
+        currentAiAvatar={currentAiAvatar}
+        onAvatarChange={handleAvatarChange}
         isGeneratingResponse={sendMessageMutation.isPending}
       />
       
       <MessageInput
         onSendMessage={handleSendMessage}
         isDisabled={sendMessageMutation.isPending}
+        replyToMessage={replyToMessage}
+        onClearReply={handleClearReply}
       />
     </div>
   );

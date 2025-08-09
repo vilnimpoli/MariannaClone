@@ -1,13 +1,17 @@
 import { useEffect, useRef } from "react";
-import { CheckCheck, Heart, Flame, Sun, Smile } from "lucide-react";
+import { CheckCheck, Heart, Flame, Sun, Smile, Reply } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import TypingIndicator from "./typing-indicator";
+import AvatarSelector from "./avatar-selector";
 import type { Message } from "@shared/schema";
 
 interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
   onAddReaction: (messageId: string, reaction: string) => void;
+  onReplyToMessage: (message: Message) => void;
+  currentAiAvatar: string;
+  onAvatarChange: (avatar: string) => void;
   isGeneratingResponse: boolean;
 }
 
@@ -17,6 +21,9 @@ export default function MessageList({
   messages, 
   isLoading, 
   onAddReaction, 
+  onReplyToMessage,
+  currentAiAvatar,
+  onAvatarChange,
   isGeneratingResponse 
 }: MessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -53,9 +60,24 @@ export default function MessageList({
             data-testid={`message-${message.id}`}
           >
             <div className={`max-w-xs lg:max-w-md ${!isUser ? 'space-y-2' : ''}`}>
+              {/* AI Avatar and name (for AI messages only) */}
+              {!isUser && (
+                <div className="flex items-center space-x-2 mb-1">
+                  <div className="w-8 h-8 gradient-avatar rounded-full flex items-center justify-center text-white font-medium text-sm">
+                    {message.aiAvatar || currentAiAvatar}
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <span className="text-light-purple text-sm font-medium">Маріанна</span>
+                    <AvatarSelector 
+                      currentAvatar={message.aiAvatar || currentAiAvatar}
+                      onAvatarChange={onAvatarChange}
+                    />
+                  </div>
+                </div>
+              )}
               <div className="group relative">
                 {message.mediaUrl && (
-                  <div className={`${isUser ? 'bg-bright-purple' : 'bg-medium-purple'} rounded-2xl ${isUser ? 'rounded-br-md' : 'rounded-bl-md'} overflow-hidden shadow-lg mb-2`}>
+                  <div className={`${isUser ? 'bg-bright-purple border-bright-purple' : 'bg-medium-purple border-bright-purple'} border-2 rounded-2xl ${isUser ? 'rounded-br-md' : 'rounded-bl-md'} overflow-hidden shadow-lg mb-2`}>
                     {message.mediaType === 'image' ? (
                       <img 
                         src={message.mediaUrl} 
@@ -75,16 +97,27 @@ export default function MessageList({
                 )}
                 
                 {message.content && (
-                  <div className={`${isUser ? 'bg-bright-purple' : 'bg-medium-purple'} rounded-2xl ${isUser ? 'rounded-br-md' : 'rounded-bl-md'} p-3 shadow-lg`}>
+                  <div className={`${isUser ? 'bg-bright-purple border-bright-purple' : 'bg-medium-purple border-bright-purple'} border-2 rounded-2xl ${isUser ? 'rounded-br-md' : 'rounded-bl-md'} p-3 shadow-lg`}>
                     <p className="text-white" data-testid={`text-message-${message.id}`}>
                       {message.content}
                     </p>
                   </div>
                 )}
 
-                {/* Reaction buttons */}
+                {/* Reaction and Reply buttons */}
                 <div className="absolute -right-8 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="flex flex-col space-y-1">
+                    {/* Reply button */}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-8 h-8 p-0 bg-medium-purple/80 hover:bg-bright-purple/20"
+                      onClick={() => onReplyToMessage(message)}
+                      data-testid={`button-reply-${message.id}`}
+                    >
+                      <Reply className="h-4 w-4 text-light-purple" />
+                    </Button>
+                    {/* Reaction emojis */}
                     {REACTION_EMOJIS.map((emoji) => (
                       <Button
                         key={emoji}
