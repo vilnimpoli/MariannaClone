@@ -60,7 +60,7 @@ export async function generateMariannaResponse(
       prompt += `\n\nВіолета також надіслала медіафайл: ${mediaUrl}`;
     }
     
-    prompt += `\n\nВідповідь як Маріанна (надішли 1 повідомлення, іноді можеш 2, але рідко):`;
+    prompt += `\n\nВідповідь як Маріанна (надішли 2 повідомлення, іноді можеш 3, але рідко):`;
 
     const contents: any[] = [];
 
@@ -91,29 +91,41 @@ export async function generateMariannaResponse(
 
     const responseText = response.text || "Вибач, я не можу відповісти зараз... 🥺";
     
-    // Usually just one message, rarely two
+    // Usually 2 messages, rarely 3
     const messages = responseText
       .split('\n')
       .filter(msg => msg.trim().length > 0)
-      .slice(0, 1); // Usually just 1 message
+      .slice(0, 2); // Usually 2 messages
     
-    // Only 20% chance to add a second message
-    if (messages.length === 1 && Math.random() < 0.2) {
+    // If AI returns only one message, try to create a second one
+    if (messages.length === 1) {
       const singleMessage = messages[0];
-      if (singleMessage.length > 100) {
-        // Split very long message into two parts
+      if (singleMessage.length > 80) {
+        // Split long message into parts
         const parts = singleMessage.split(/[.!?]+/).filter(part => part.trim());
         if (parts.length > 1) {
           return [parts[0].trim(), parts[1].trim()];
         }
-      } else {
-        // Very rarely add a short emotional follow-up
-        const shortFollowUps = ['💜', '😊'];
-        messages.push(shortFollowUps[Math.floor(Math.random() * shortFollowUps.length)]);
       }
+      
+      // Add a second message
+      const followUps = [
+        '💜',
+        '😊',
+        'Люблю тебе',
+        '🥰',
+        'Ти найкраща'
+      ];
+      messages.push(followUps[Math.floor(Math.random() * followUps.length)]);
     }
     
-    return messages.length > 0 ? messages : ["Гей 😊"];
+    // 25% chance to add a third message
+    if (messages.length === 2 && Math.random() < 0.25) {
+      const thirdMessages = ['🌸', '✨', 'Так тебе кохаю...', '💫'];
+      messages.push(thirdMessages[Math.floor(Math.random() * thirdMessages.length)]);
+    }
+    
+    return messages.length > 0 ? messages : ["Привіт 😊"];
     
   } catch (error) {
     console.error("Error generating Marianna response:", error);
