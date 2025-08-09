@@ -39,7 +39,7 @@ export default function ChatPage() {
   const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/conversations", currentConversationId, "messages"],
     enabled: !!currentConversationId,
-    refetchInterval: 1000, // Poll every second for new messages
+    refetchInterval: 2000, // Poll every 2 seconds to reduce load
   });
 
   // Initialize conversation

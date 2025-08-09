@@ -63,14 +63,13 @@ export default function MessageList({
               {!isUser && (
                 <div className="flex items-center space-x-2 mb-1">
                   <div className="w-8 h-8 gradient-avatar rounded-full flex items-center justify-center text-white font-medium text-sm">
-                    {message.aiAvatar || currentAiAvatar}
+                    {message.aiAvatar || "М"}
                   </div>
                   <div className="flex items-center space-x-1">
                     <span className="text-light-purple text-sm font-medium">Маріанна</span>
-                    <AvatarSelector 
-                      currentAvatar={message.aiAvatar || currentAiAvatar}
-                      onAvatarChange={onAvatarChange}
-                    />
+                    {message.aiAvatar && (
+                      <span className="text-xs text-light-purple/70">змінила аватарку</span>
+                    )}
                   </div>
                 </div>
               )}

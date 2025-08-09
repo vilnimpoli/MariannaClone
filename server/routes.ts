@@ -117,13 +117,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
               }
               
+              // Randomly change avatar sometimes (15% chance - less frequent)
+              const shouldChangeAvatar = Math.random() < 0.15;
+              const avatarOptions = ['🌸', '🦋', '✨', '🌙', '🌺', '💫', '🎀', '👑', '💎', '🌹', '🦄'];
+              const newAvatar = shouldChangeAvatar ? avatarOptions[Math.floor(Math.random() * avatarOptions.length)] : null;
+              
               const aiMessageData = {
                 conversationId: req.params.id,
                 content: aiResponses[i],
                 sender: 'ai' as const,
                 mediaUrl: null,
                 mediaType: null,
-                aiAvatar: null,
+                aiAvatar: newAvatar,
                 replyToId: null,
               };
               await storage.createMessage(aiMessageData);

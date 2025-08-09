@@ -39,11 +39,12 @@ export default function MessageInput({ onSendMessage, isDisabled, replyToMessage
   };
 
   const handleStickerSelect = (sticker: string) => {
-    onSendMessage(sticker, undefined, replyToMessage?.id);
+    // Add sticker to message text instead of sending immediately
+    setMessageText(prev => prev + sticker);
     
-    // Clear reply if exists
-    if (replyToMessage && onClearReply) {
-      onClearReply();
+    // Focus back to textarea
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
   };
 
