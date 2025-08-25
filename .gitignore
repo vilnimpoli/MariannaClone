@@ -7,5 +7,6 @@ vite.config.ts.*
 *.log
 .env
 .env.*
+!.env.example
 uploads/*
 !uploads/.gitkeep
